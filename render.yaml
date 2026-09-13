@@ -1,0 +1,14 @@
+# Render Blueprint — in the Render dashboard choose New → Blueprint and pick this repo.
+services:
+  - type: web
+    name: playlist-bracket
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: TRUST_PROXY
+        value: "1"

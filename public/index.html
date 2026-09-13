@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Playlist Bracket</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" id="brandLink">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h5v6h5M3 20h5v-6M13 10v4h8M13 14H8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Playlist Bracket
+    </a>
+  </header>
+
+  <main>
+    <!-- 1. Import -->
+    <section id="screen-import" class="screen">
+      <div class="hero">
+        <p class="eyebrow">Song showdown</p>
+        <h1>Every song in your playlist.<br><span class="accent">One champion.</span></h1>
+        <p class="lede">Paste a Spotify playlist link, listen head-to-head, and pick winners round by round until one song is left standing.</p>
+
+        <form id="importForm" class="import-form" autocomplete="off">
+          <input id="linkInput" type="text" spellcheck="false" aria-label="Spotify playlist link"
+                 placeholder="https://open.spotify.com/playlist/…">
+          <button class="btn btn-primary" id="loadBtn" type="submit">Load playlist</button>
+        </form>
+        <p class="form-msg" id="importMsg" role="status"></p>
+
+        <details class="more">
+          <summary>Playlist has more than 100 songs?</summary>
+          <div class="more-body">
+            <p>Spotify only shares the first 100 songs of a playlist publicly. To include everything, open the playlist in the Spotify desktop app, click any song, press <kbd>Ctrl</kbd>+<kbd>A</kbd> then <kbd>Ctrl</kbd>+<kbd>C</kbd>, and paste the links here.</p>
+            <textarea id="pasteInput" rows="5" spellcheck="false" placeholder="https://open.spotify.com/track/…&#10;https://open.spotify.com/track/…"></textarea>
+            <div class="row">
+              <button class="btn" id="pasteBtn" type="button">Load pasted songs</button>
+              <span class="muted" id="pasteCount"></span>
+            </div>
+          </div>
+        </details>
+
+        <div id="resumeCard" class="resume" hidden></div>
+      </div>
+    </section>
+
+    <!-- 2. Setup -->
+    <section id="screen-setup" class="screen" hidden>
+      <div class="setup">
+        <div class="setup-head">
+          <img id="setupCover" class="cover" alt="">
+          <div>
+            <p class="eyebrow" id="setupKind">Playlist</p>
+            <h2 id="setupTitle"></h2>
+            <p class="muted" id="setupOwner"></p>
+          </div>
+        </div>
+        <div id="setupNotice" class="notice" hidden></div>
+
+        <div class="setup-grid">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Songs <span id="songCount" class="muted"></span></h3>
+              <div class="panel-tools">
+                <button class="link-btn" id="selectAll" type="button">Select all</button>
+                <button class="link-btn" id="selectNone" type="button">Clear</button>
+              </div>
+            </div>
+            <input id="songFilter" class="filter" type="search" placeholder="Filter songs or artists">
+            <ol id="songList" class="song-list"></ol>
+          </div>
+
+          <div class="panel options">
+            <h3>Seeding</h3>
+            <label class="choice">
+              <input type="radio" name="seeding" value="order" checked>
+              <span><strong>Playlist order</strong><small>Songs near the top get the highest seeds and face the lowest seeds first</small></span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="seeding" value="random">
+              <span><strong>Random draw</strong><small>Shuffle who plays who</small></span>
+            </label>
+
+            <div id="fitGroup">
+              <h3>Uneven number of songs</h3>
+              <label class="choice">
+                <input type="radio" name="fit" value="byes" checked>
+                <span><strong>Give byes</strong><small id="byesHint"></small></span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="fit" value="trim">
+                <span><strong>Trim the field</strong><small id="trimHint"></small></span>
+              </label>
+            </div>
+
+            <div class="summary" id="setupSummary"></div>
+            <button class="btn btn-primary btn-lg" id="buildBtn" type="button">Build bracket</button>
+            <button class="btn btn-ghost" id="backBtn" type="button">Use a different playlist</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Bracket -->
+    <section id="screen-bracket" class="screen" hidden>
+      <div class="bracket-bar">
+        <div class="bb-title">
+          <img id="bbCover" class="cover-sm" alt="">
+          <div>
+            <h2 id="bbTitle"></h2>
+            <p class="muted" id="bbProgress"></p>
+          </div>
+        </div>
+        <div class="bb-actions">
+          <button class="btn btn-primary" id="playBtn" type="button">Play next matchup</button>
+          <button class="btn btn-ghost" id="undoBtn" type="button" disabled>Undo</button>
+          <div class="zoom" role="group" aria-label="Zoom">
+            <button class="icon-btn" id="zoomOut" type="button" aria-label="Zoom out">−</button>
+            <button class="zoom-val" id="zoomFit" type="button" title="Fit to screen">100%</button>
+            <button class="icon-btn" id="zoomIn" type="button" aria-label="Zoom in">+</button>
+          </div>
+          <div class="menu">
+            <button class="icon-btn" id="menuBtn" type="button" aria-label="More options" aria-haspopup="true" aria-expanded="false">⋯</button>
+            <div class="menu-list" id="menuList" hidden>
+              <button type="button" data-action="copy">Copy results</button>
+              <button type="button" data-action="reset">Clear all picks</button>
+              <button type="button" data-action="new">Start a new bracket</button>
+            </div>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+      <p class="hint muted">Click a song to send it through · hover to trace its path</p>
+      <div class="bracket-scroll" id="bracketScroll">
+        <div class="bracket" id="bracket"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Matchup overlay -->
+  <div class="overlay" id="matchOverlay" hidden>
+    <div class="match-stage" role="dialog" aria-modal="true" aria-labelledby="mRound">
+      <div class="ms-head">
+        <div>
+          <p class="eyebrow" id="mRound"></p>
+          <p class="muted" id="mCount"></p>
+        </div>
+        <button class="icon-btn" id="mClose" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="ms-body">
+        <div class="contender" id="mA"></div>
+        <div class="vs" aria-hidden="true">VS</div>
+        <div class="contender" id="mB"></div>
+      </div>
+      <div class="ms-foot">
+        <button class="btn btn-ghost" id="mUndo" type="button">Undo last pick</button>
+        <span class="muted keys"><kbd>←</kbd> <kbd>→</kbd> pick · <kbd>Esc</kbd> close</span>
+        <button class="btn btn-ghost" id="mSkip" type="button">Skip for now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Champion overlay -->
+  <div class="overlay champ" id="champOverlay" hidden>
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="champ-card" role="dialog" aria-modal="true" aria-labelledby="champName">
+      <p class="eyebrow">🏆 Champion</p>
+      <img id="champArt" class="champ-art" alt="">
+      <h2 id="champName"></h2>
+      <p id="champArtist" class="champ-artist"></p>
+      <p id="champSub" class="muted"></p>
+      <div class="row center">
+        <a class="btn btn-primary" id="champOpen" target="_blank" rel="noopener">Open in Spotify</a>
+        <button class="btn" id="champCopy" type="button">Copy results</button>
+        <button class="btn btn-ghost" id="champClose" type="button">View bracket</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <script src="bracket.js"></script>
+  <script src="view.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

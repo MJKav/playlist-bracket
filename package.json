@@ -1,0 +1,13 @@
+{
+  "name": "playlist-bracket",
+  "version": "1.0.0",
+  "description": "Turn any Spotify playlist into a head-to-head song bracket.",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20 <25"
+  }
+}
